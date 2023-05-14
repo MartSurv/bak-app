@@ -3,7 +3,7 @@ import { AppProps } from "next/app";
 import AppLayout from "@/components/AppLayout/AppLayout";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import NextNProgress from "nextjs-progressbar";
-import "bootstrap/dist/css/bootstrap.min.css";
+import "antd/dist/reset.css";
 
 export default function App({ Component, pageProps }: AppProps) {
   const queryClient = new QueryClient();

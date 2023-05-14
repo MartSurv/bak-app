@@ -44,7 +44,7 @@ export default function AppLayout({ children }: PropsWithChildren) {
       </Sider>
       <Layout>
         <Header style={{ backgroundColor: "#001529" }} />
-        <Content className="p-4">
+        <Content style={{ padding: 10 }}>
           <div>{children}</div>
         </Content>
         <Footer style={{ textAlign: "center" }}>Ant Design ©2023 Created by Ant UED</Footer>

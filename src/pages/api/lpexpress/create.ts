@@ -7,21 +7,21 @@ export default withApiAuthRequired(async function handler(
   req: NextApiRequest,
   res: NextApiResponse
 ) {
-  if (req.method === "GET") {
+  if (req.method === "POST") {
     try {
-      const { data: tokenData } = await axios.post<LpexpressToken>(
+      const { data } = await axios.post<LpexpressToken>(
         `${process.env.LPEXPRESS_API_URL}/oauth/token?scope=read+write&grant_type=password&clientSystem=PUBLIC&username=${process.env.LPEXPRESS_USERNAME}&password=${process.env.LPEXPRESS_PASSWORD}`
       );
-      console.log(tokenData);
-      const { data: shipments } = await axios.get(
-        `${process.env.LPEXPRESS_API_URL}/api/v1/shipping/filter?count=1`,
+      const { data: createShipmentRes } = await axios.post(
+        `${process.env.LPEXPRESS_API_URL}/api/v1/shipping`,
+        req.body,
         {
           headers: {
-            Authorization: `Bearer ${tokenData.access_token}`,
+            Authorization: `Bearer ${data.access_token}`,
           },
         }
       );
-      res.status(200).send(shipments);
+      res.status(200).send(createShipmentRes);
     } catch (e) {
       const error = e as AxiosError;
       res.status(error.response?.status ?? 500).send(error.response?.data);
