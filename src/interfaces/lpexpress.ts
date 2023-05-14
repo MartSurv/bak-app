@@ -45,6 +45,11 @@ export interface Sender {
   email?: string;
 }
 
+export enum ShipmentStatus {
+  LABEL_CREATED = "LABEL_CREATED",
+  PENDING = "PENDING",
+}
+
 export interface Shipment {
   template: number;
   weight: number;
@@ -67,9 +72,15 @@ export interface Shipment {
   createdOn?: string;
   barcode?: string;
   price?: { amount: 3.8; vat: 0; currency: "EUR" };
-  status?: string;
+  status?: ShipmentStatus;
   type?: string;
   size?: string;
   title?: string;
   addressResolverInfo?: any[];
+}
+
+export interface Sticker {
+  itemId: string;
+  label: string;
+  contentType: string;
 }

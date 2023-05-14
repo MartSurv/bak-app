@@ -1,7 +1,8 @@
-import { Receiver, Shipment } from "@/interfaces/lpexpress";
+import { Receiver, Shipment, ShipmentStatus } from "@/interfaces/lpexpress";
 import GetShipments from "@/internalApi/GetShipments";
-import { useQuery } from "@tanstack/react-query";
-import { Table, Typography } from "antd";
+import GetSticker from "@/internalApi/GetSticker";
+import { useMutation, useQuery } from "@tanstack/react-query";
+import { Button, Table, Typography } from "antd";
 import { ColumnsType } from "antd/es/table";
 import Head from "next/head";
 
@@ -12,6 +13,25 @@ export default function Shipments() {
     queryKey: ["shipments"],
     queryFn: () => GetShipments(),
   });
+
+  const { mutateAsync: getSticker, isLoading: stickerIsLoading } = useMutation({
+    mutationKey: ["sticker"],
+    mutationFn: (id: string) => GetSticker(id),
+  });
+
+  const handleDownloadSticker = async (shipment: Shipment) => {
+    if (shipment.id) {
+      const sticker = await getSticker(shipment.id);
+
+      const linkSource = `data:application/pdf;base64,${sticker[0].label}`;
+      const downloadLink = document.createElement("a");
+      const fileName = `${sticker[0].itemId}.pdf`;
+
+      downloadLink.href = linkSource;
+      downloadLink.download = fileName;
+      downloadLink.click();
+    }
+  };
 
   const columns: ColumnsType<Shipment> = [
     {
@@ -46,6 +66,25 @@ export default function Shipments() {
     {
       title: "Statusas",
       dataIndex: "status",
+    },
+    {
+      title: "Veiksmai",
+      key: "action",
+      render: (_, record) => {
+        if (record.status !== ShipmentStatus.LABEL_CREATED) {
+          return null;
+        }
+
+        return (
+          <Button
+            type="primary"
+            loading={stickerIsLoading}
+            onClick={() => handleDownloadSticker(record)}
+          >
+            Atsisiųsti lipduką
+          </Button>
+        );
+      },
     },
   ];
 

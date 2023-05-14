@@ -8,6 +8,7 @@ import { useEffect, useState } from "react";
 import CreateShipment from "@/internalApi/CreateShipment";
 import { Shipment } from "@/interfaces/lpexpress";
 import InitiateShipment from "@/internalApi/InitiateShipment";
+import dayjs from "dayjs";
 
 interface FormData {
   name: string;
@@ -22,7 +23,7 @@ interface FormData {
 }
 
 const { useForm } = Form;
-const { Title } = Typography;
+const { Title, Text } = Typography;
 
 export default function Orders() {
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -49,15 +50,19 @@ export default function Orders() {
       title: "Užsakymo Nr.",
       dataIndex: "order_number",
     },
-    { title: "Data", dataIndex: "created_at" },
+    {
+      title: "Data",
+      dataIndex: "created_at",
+      render: (value) => dayjs(value).format("YYYY-MM-DD HH:MM"),
+    },
     {
       title: "UŽSAKOVAS",
       dataIndex: "billing_address",
       render: (billingAddress: BillingAddress) => {
         return (
           <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
-            <span>{`Vardas: ${billingAddress.name}`}</span>
-            <span>{`Šalis: ${billingAddress.country}`}</span>
+            <Text>{`Vardas: ${billingAddress.name}`}</Text>
+            <Text>{`Šalis: ${billingAddress.country}`}</Text>
           </div>
         );
       },
@@ -70,9 +75,9 @@ export default function Orders() {
           <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
             {lineItems.map((lineItem) => {
               return (
-                <span
+                <Text
                   key={lineItem.id}
-                >{`${lineItem.name} - ${lineItem.price} ${lineItem.price_set.shop_money.currency_code}`}</span>
+                >{`${lineItem.title} - ${lineItem.price} ${lineItem.price_set.shop_money.currency_code}`}</Text>
               );
             })}
           </div>
