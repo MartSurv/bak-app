@@ -12,7 +12,6 @@ export default withApiAuthRequired(async function handler(
       const { data: tokenData } = await axios.post<LpexpressToken>(
         `${process.env.LPEXPRESS_API_URL}/oauth/token?scope=read+write&grant_type=password&clientSystem=PUBLIC&username=${process.env.LPEXPRESS_USERNAME}&password=${process.env.LPEXPRESS_PASSWORD}`
       );
-      console.log(tokenData);
       const { data: shipments } = await axios.get(
         `${process.env.LPEXPRESS_API_URL}/api/v1/shipping/filter?count=1`,
         {

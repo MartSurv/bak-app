@@ -12,7 +12,6 @@ export default withApiAuthRequired(async function handler(
       const { data } = await axios.post<LpexpressToken>(
         `${process.env.LPEXPRESS_API_URL}/oauth/token?scope=read+write&grant_type=password&clientSystem=PUBLIC&username=${process.env.LPEXPRESS_USERNAME}&password=${process.env.LPEXPRESS_PASSWORD}`
       );
-      console.log(req.body);
       const { data: initiateData } = await axios.post(
         `${process.env.LPEXPRESS_API_URL}/api/v1/shipping/initiate`,
         req.body,

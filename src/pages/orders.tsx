@@ -93,7 +93,6 @@ export default function Orders() {
   ];
 
   const onFinish = (values: FormData) => {
-    console.log(values);
     createOrder({
       template: 74,
       partCount: 1,
