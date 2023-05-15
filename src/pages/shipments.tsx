@@ -1,3 +1,4 @@
+import { QueryKeys } from "@/interfaces";
 import { Receiver, Shipment, ShipmentStatus } from "@/interfaces/lpexpress";
 import GetShipments from "@/internalApi/GetShipments";
 import GetSticker from "@/internalApi/GetSticker";
@@ -29,7 +30,7 @@ export default withPageAuthRequired(function Shipments() {
   });
 
   const { data: shipments, isLoading } = useQuery({
-    queryKey: ["shipments", tableParams.pagination?.pageSize],
+    queryKey: [QueryKeys.SHIPMENTS, tableParams.pagination?.pageSize],
     queryFn: () => GetShipments(tableParams.pagination?.pageSize ?? 10),
   });
 

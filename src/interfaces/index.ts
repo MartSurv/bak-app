@@ -14,6 +14,7 @@ export enum Path {
 
 export enum QueryKeys {
   ORDERS = "orders",
+  SHIPMENTS = "shipments",
 }
 
 export interface PageProps {
