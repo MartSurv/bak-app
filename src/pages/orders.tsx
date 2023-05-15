@@ -1,6 +1,14 @@
 import GetOrders from "@/internalApi/GetOrders";
 import { useMutation, useQuery } from "@tanstack/react-query";
-import { Button, Form, Input, InputNumber, Modal, Table, Typography } from "antd";
+import {
+  Button,
+  Form,
+  Input,
+  InputNumber,
+  Modal,
+  Table,
+  Typography,
+} from "antd";
 import Head from "next/head";
 import type { ColumnsType } from "antd/es/table";
 import { BillingAddress, LineItem, Order } from "@/interfaces/order";
@@ -9,6 +17,7 @@ import CreateShipment from "@/internalApi/CreateShipment";
 import { Shipment } from "@/interfaces/lpexpress";
 import InitiateShipment from "@/internalApi/InitiateShipment";
 import dayjs from "dayjs";
+import { PageProps, QueryKeys } from "@/interfaces";
 
 interface FormData {
   name: string;
@@ -25,19 +34,39 @@ interface FormData {
 const { useForm } = Form;
 const { Title, Text } = Typography;
 
-export default function Orders() {
+export default function Orders(props: PageProps) {
+  const { notificationApi } = props;
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [orderToSend, setOrderToSend] = useState<Order>();
   const [form] = useForm<FormData>();
-  const { data: orders, isLoading } = useQuery({
-    queryKey: ["orders"],
+  const { data: orders, isLoading: isOrdersLoading } = useQuery({
+    queryKey: [QueryKeys.ORDERS],
     queryFn: () => GetOrders(),
   });
 
-  const { mutate: createOrder } = useMutation({
+  const { mutate: initiateShipment, isLoading: isInitiateShipmentLoading } =
+    useMutation({
+      mutationKey: ["initiateShipment"],
+      mutationFn: (data: { id: string }) => InitiateShipment([data.id]),
+      onSuccess: () => {
+        notificationApi.success({
+          message: "Success",
+          description: "Siunta inicijuota sėkmigai",
+        });
+        setIsModalOpen(false);
+      },
+    });
+
+  const { mutate: createOrder, isLoading: isCreateOrderLoading } = useMutation({
     mutationKey: ["createShipment"],
     mutationFn: (data: Shipment) => CreateShipment(data),
-    onSuccess: (data) => InitiateShipment([data.id]),
+    onSuccess: (data) => {
+      notificationApi.success({
+        message: "Success",
+        description: "Siunta sukurta sėkmigai",
+      });
+      initiateShipment(data);
+    },
   });
 
   const handleSendOrderClick = (record: Order) => {
@@ -163,7 +192,12 @@ export default function Orders() {
         <title>Užsakymai</title>
       </Head>
       <Title>Užsakymai</Title>
-      <Table columns={columns} dataSource={orders ?? []} loading={isLoading} rowKey="id" />
+      <Table
+        columns={columns}
+        dataSource={orders ?? []}
+        loading={isOrdersLoading}
+        rowKey="id"
+      />
       <Modal
         title="Sukurti Siuntą"
         open={isModalOpen}
@@ -236,7 +270,11 @@ export default function Orders() {
             <InputNumber className="w-100" />
           </Form.Item>
           <Form.Item>
-            <Button type="primary" htmlType="submit">
+            <Button
+              type="primary"
+              htmlType="submit"
+              loading={isCreateOrderLoading || isInitiateShipmentLoading}
+            >
               Sukurti
             </Button>
           </Form.Item>

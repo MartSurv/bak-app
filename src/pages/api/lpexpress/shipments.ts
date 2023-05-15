@@ -13,7 +13,7 @@ export default withApiAuthRequired(async function handler(
         `${process.env.LPEXPRESS_API_URL}/oauth/token?scope=read+write&grant_type=password&clientSystem=PUBLIC&username=${process.env.LPEXPRESS_USERNAME}&password=${process.env.LPEXPRESS_PASSWORD}`
       );
       const { data: shipments } = await axios.get(
-        `${process.env.LPEXPRESS_API_URL}/api/v1/shipping/filter?count=1`,
+        `${process.env.LPEXPRESS_API_URL}/api/v1/shipping/filter?count=${req.query.pageSize}`,
         {
           headers: {
             Authorization: `Bearer ${tokenData.access_token}`,

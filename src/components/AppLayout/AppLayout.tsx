@@ -1,6 +1,6 @@
 import { Layout, Menu, Typography } from "antd";
 import { InboxOutlined, SendOutlined, UserOutlined } from "@ant-design/icons";
-import React, { PropsWithChildren } from "react";
+import React, { PropsWithChildren, useEffect, useState } from "react";
 import { useRouter } from "next/router";
 import { Path } from "@/interfaces";
 import Image from "next/image";
@@ -12,6 +12,10 @@ const { Text } = Typography;
 export default function AppLayout({ children }: PropsWithChildren) {
   const { pathname, push } = useRouter();
   const { user } = useUser();
+
+  if (!user) {
+    return null;
+  }
 
   return (
     <Layout style={{ minHeight: "100vh" }}>
@@ -25,7 +29,13 @@ export default function AppLayout({ children }: PropsWithChildren) {
           console.log(collapsed, type);
         }}
       >
-        <div style={{ display: "flex", alignItems: "center", justifyContent: "center" }}>
+        <div
+          style={{
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+          }}
+        >
           <Image src="./Logo.svg" alt="Logo" width={150} height={64} />
         </div>
         <Menu
@@ -66,7 +76,9 @@ export default function AppLayout({ children }: PropsWithChildren) {
         <Content style={{ padding: 20 }}>
           <div>{children}</div>
         </Content>
-        <Footer style={{ textAlign: "center" }}>Ant Design ©2023 Created by Ant UED</Footer>
+        <Footer style={{ textAlign: "center" }}>
+          Ant Design ©2023 Created by Ant UED
+        </Footer>
       </Layout>
     </Layout>
   );
