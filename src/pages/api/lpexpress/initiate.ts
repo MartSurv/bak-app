@@ -1,7 +1,8 @@
 import { NextApiRequest, NextApiResponse } from "next";
 import { withApiAuthRequired } from "@auth0/nextjs-auth0";
 import axios, { AxiosError } from "axios";
-import { LpexpressToken } from "@/interfaces/lpexpress";
+import { LpexpressToken, ShipmentStatus } from "@/interfaces/lpexpress";
+import clientPromise from "@/lib/mongodb";
 
 export default withApiAuthRequired(async function handler(
   req: NextApiRequest,
@@ -21,6 +22,17 @@ export default withApiAuthRequired(async function handler(
           },
         }
       );
+      const client = await clientPromise;
+      const db = client.db("post_tool");
+      for (let i = 0; i < req.body.length; i++) {
+        await db
+          .collection("shipments")
+          .findOneAndUpdate(
+            { id: req.body[i] },
+            { $set: { status: ShipmentStatus.LABEL_CREATED } }
+          );
+      }
+
       res.status(200).send(initiateData);
     } catch (e) {
       const error = e as AxiosError;

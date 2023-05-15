@@ -6,7 +6,7 @@ import { Path } from "@/interfaces";
 import Image from "next/image";
 import { useUser } from "@auth0/nextjs-auth0/client";
 
-const { Header, Footer, Sider, Content } = Layout;
+const { Header, Sider, Content } = Layout;
 const { Text } = Typography;
 
 export default function AppLayout({ children }: PropsWithChildren) {
@@ -97,9 +97,9 @@ export default function AppLayout({ children }: PropsWithChildren) {
         <Content style={{ padding: 20 }}>
           <div>{children}</div>
         </Content>
-        <Footer style={{ textAlign: "center" }}>
+        {/* <Footer style={{ textAlign: "center" }}>
           Ant Design ©2023 Created by Ant UED
-        </Footer>
+        </Footer> */}
       </Layout>
     </Layout>
   );

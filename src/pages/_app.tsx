@@ -5,6 +5,10 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import NextNProgress from "nextjs-progressbar";
 import "antd/dist/reset.css";
 import { notification } from "antd";
+import dayjs from "dayjs";
+import utc from "dayjs/plugin/utc";
+
+dayjs.extend(utc);
 
 export default function App({ Component, pageProps }: AppProps) {
   const queryClient = new QueryClient();

@@ -2,6 +2,7 @@ import { NextApiRequest, NextApiResponse } from "next";
 import { withApiAuthRequired } from "@auth0/nextjs-auth0";
 import axios, { AxiosError } from "axios";
 import { LpexpressToken } from "@/interfaces/lpexpress";
+import clientPromise from "@/lib/mongodb";
 
 export default withApiAuthRequired(async function handler(
   req: NextApiRequest,
@@ -21,6 +22,10 @@ export default withApiAuthRequired(async function handler(
           },
         }
       );
+      const client = await clientPromise;
+      const db = client.db("post_tool");
+      await db.collection("shipments").insertOne(createShipmentRes);
+
       res.status(200).send(createShipmentRes);
     } catch (e) {
       const error = e as AxiosError;
