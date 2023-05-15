@@ -1,6 +1,6 @@
-import { Layout, Menu, Typography } from "antd";
-import { InboxOutlined, SendOutlined, UserOutlined } from "@ant-design/icons";
-import React, { PropsWithChildren, useEffect, useState } from "react";
+import { Button, Layout, Menu, Spin, Tooltip, Typography } from "antd";
+import { InboxOutlined, SendOutlined, LogoutOutlined } from "@ant-design/icons";
+import React, { PropsWithChildren } from "react";
 import { useRouter } from "next/router";
 import { Path } from "@/interfaces";
 import Image from "next/image";
@@ -14,7 +14,20 @@ export default function AppLayout({ children }: PropsWithChildren) {
   const { user } = useUser();
 
   if (!user) {
-    return null;
+    return (
+      <div
+        style={{
+          height: "100vh",
+          display: "flex",
+          justifyContent: "center",
+          alignItems: "center",
+          gap: 10,
+        }}
+      >
+        <Text>Authenticating...</Text>
+        <Spin size="large" />
+      </div>
+    );
   }
 
   return (
@@ -22,12 +35,12 @@ export default function AppLayout({ children }: PropsWithChildren) {
       <Sider
         breakpoint="lg"
         collapsedWidth="0"
-        onBreakpoint={(broken) => {
-          console.log(broken);
-        }}
-        onCollapse={(collapsed, type) => {
-          console.log(collapsed, type);
-        }}
+        // onBreakpoint={(broken) => {
+        //   console.log(broken);
+        // }}
+        // onCollapse={(collapsed, type) => {
+        //   console.log(collapsed, type);
+        // }}
       >
         <div
           style={{
@@ -70,7 +83,14 @@ export default function AppLayout({ children }: PropsWithChildren) {
             }}
           >
             <Text style={{ color: "#e6f4ff" }}>{user?.name}</Text>
-            <UserOutlined style={{ color: "#e6f4ff" }} />
+            <Tooltip title="Logout">
+              <Button
+                shape="circle"
+                icon={<LogoutOutlined />}
+                size="small"
+                onClick={() => push(Path.API_AUTH_LOGOUT)}
+              />
+            </Tooltip>
           </div>
         </Header>
         <Content style={{ padding: 20 }}>
