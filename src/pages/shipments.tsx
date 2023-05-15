@@ -1,10 +1,11 @@
+import useGetSticker from "@/hooks/useGetSticker";
 import useInitiateShipment from "@/hooks/useInitiateShipment";
 import { PageProps, QueryKeys } from "@/interfaces";
 import { Receiver, Shipment, ShipmentStatus } from "@/interfaces/lpexpress";
 import GetShipments from "@/internalApi/GetShipments";
 import GetSticker from "@/internalApi/GetSticker";
 import { withPageAuthRequired } from "@auth0/nextjs-auth0/client";
-import { useMutation, useQuery } from "@tanstack/react-query";
+import { useQuery } from "@tanstack/react-query";
 import { Button, DatePicker, Table, Typography } from "antd";
 import { ColumnsType, TablePaginationConfig } from "antd/es/table";
 import { FilterValue } from "antd/es/table/interface";
@@ -30,7 +31,6 @@ export default withPageAuthRequired(function Shipments(props: PageProps) {
     dayjs(),
     dayjs(),
   ]);
-  const offset = 0;
   const [tableParams, setTableParams] = useState<TableParams>({
     pagination: {
       current: 1,
@@ -44,11 +44,10 @@ export default withPageAuthRequired(function Shipments(props: PageProps) {
     queryKey: [
       QueryKeys.SHIPMENTS,
       tableParams.pagination?.pageSize,
-      offset,
       dateRange,
     ],
     queryFn: () =>
-      GetShipments(tableParams.pagination?.pageSize ?? 5, offset, dateRange),
+      GetShipments(tableParams.pagination?.pageSize ?? 5, dateRange),
     onError: (e) => {
       const error = e as AxiosError;
       notificationApi.error({
@@ -58,17 +57,8 @@ export default withPageAuthRequired(function Shipments(props: PageProps) {
     },
   });
 
-  const { mutateAsync: getSticker, isLoading: isStickerLoading } = useMutation({
-    mutationKey: ["sticker"],
-    mutationFn: (id: string) => GetSticker(id),
-    onError: (e) => {
-      const error = e as AxiosError;
-      notificationApi.error({
-        message: `Error ${error.response?.status ?? ""}`,
-        description: "Nepavyko gauti siuntos lipduko",
-      });
-    },
-  });
+  const { mutateAsync: getSticker, isLoading: isStickerLoading } =
+    useGetSticker(notificationApi);
 
   const { mutate: initiateShipment, isLoading: isInitiateShipmentLoading } =
     useInitiateShipment(notificationApi);
@@ -94,6 +84,8 @@ export default withPageAuthRequired(function Shipments(props: PageProps) {
   const handleDateChange = (values: RangeValue<dayjs.Dayjs>) => {
     if (values?.[0] && values?.[1]) {
       setDateRange([values[0], values[1]]);
+    } else {
+      setDateRange([dayjs(), dayjs()]);
     }
   };
 

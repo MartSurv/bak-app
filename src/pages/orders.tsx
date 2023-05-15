@@ -56,7 +56,7 @@ export default withPageAuthRequired(function Orders(props: PageProps) {
 
   const columns: ColumnsType<Order> = [
     {
-      title: "Užsakymo Nr.",
+      title: "Nr.",
       dataIndex: "order_number",
     },
     {
@@ -65,7 +65,7 @@ export default withPageAuthRequired(function Orders(props: PageProps) {
       render: (value) => dayjs(value).format("YYYY-MM-DD HH:MM"),
     },
     {
-      title: "UŽSAKOVAS",
+      title: "Užsakovas",
       dataIndex: "billing_address",
       render: (billingAddress: BillingAddress) => {
         return (
@@ -77,7 +77,7 @@ export default withPageAuthRequired(function Orders(props: PageProps) {
       },
     },
     {
-      title: "PREKĖ - KAINA",
+      title: "Prekės",
       dataIndex: "line_items",
       render: (lineItems: LineItem[]) => {
         return (
@@ -94,7 +94,14 @@ export default withPageAuthRequired(function Orders(props: PageProps) {
       },
     },
     {
-      title: "Action",
+      title: "Suma",
+      dataIndex: "total_price",
+      render: (value, record) => {
+        return `${value} ${record.currency}`;
+      },
+    },
+    {
+      title: "Veiksmai",
       key: "action",
       render: (_, record) => {
         return (

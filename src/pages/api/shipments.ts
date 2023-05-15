@@ -2,6 +2,7 @@ import { NextApiRequest, NextApiResponse } from "next";
 import { withApiAuthRequired } from "@auth0/nextjs-auth0";
 import { AxiosError } from "axios";
 import clientPromise from "@/lib/mongodb";
+import dayjs from "dayjs";
 
 export default withApiAuthRequired(async function handler(
   req: NextApiRequest,
@@ -14,7 +15,14 @@ export default withApiAuthRequired(async function handler(
 
       const shipments = await db
         .collection("shipments")
-        .find({})
+        .find({
+          createdOn: {
+            $gte: req.query.start,
+            $lt: dayjs(req.query.end as string)
+              .add(1, "day")
+              .format("YYYY-MM-DD"),
+          },
+        })
         .limit(Number(req?.query.pageSize) ?? 10)
         .toArray();
 
