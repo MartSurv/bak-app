@@ -26,6 +26,7 @@ export default function AppLayout({ children }: PropsWithChildren) {
       >
         <Text>Authenticating...</Text>
         <Spin size="large" />
+        {children}
       </div>
     );
   }

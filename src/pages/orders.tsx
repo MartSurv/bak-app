@@ -18,6 +18,7 @@ import { Shipment } from "@/interfaces/lpexpress";
 import InitiateShipment from "@/internalApi/InitiateShipment";
 import dayjs from "dayjs";
 import { PageProps, QueryKeys } from "@/interfaces";
+import { withPageAuthRequired } from "@auth0/nextjs-auth0/client";
 
 interface FormData {
   name: string;
@@ -34,7 +35,7 @@ interface FormData {
 const { useForm } = Form;
 const { Title, Text } = Typography;
 
-export default function Orders(props: PageProps) {
+export default withPageAuthRequired(function Orders(props: PageProps) {
   const { notificationApi } = props;
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [orderToSend, setOrderToSend] = useState<Order>();
@@ -282,4 +283,4 @@ export default function Orders(props: PageProps) {
       </Modal>
     </>
   );
-}
+});

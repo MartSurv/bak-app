@@ -1,6 +1,7 @@
 import { Receiver, Shipment, ShipmentStatus } from "@/interfaces/lpexpress";
 import GetShipments from "@/internalApi/GetShipments";
 import GetSticker from "@/internalApi/GetSticker";
+import { withPageAuthRequired } from "@auth0/nextjs-auth0/client";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { Button, Table, Typography } from "antd";
 import { ColumnsType, TablePaginationConfig } from "antd/es/table";
@@ -17,7 +18,7 @@ interface TableParams {
   filters?: Record<string, FilterValue>;
 }
 
-export default function Shipments() {
+export default withPageAuthRequired(function Shipments() {
   const [tableParams, setTableParams] = useState<TableParams>({
     pagination: {
       current: 1,
@@ -126,4 +127,4 @@ export default function Shipments() {
       />
     </>
   );
-}
+});
