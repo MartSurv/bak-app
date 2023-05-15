@@ -24,7 +24,9 @@ export default withApiAuthRequired(async function handler(
       res.status(200).send(initiateData);
     } catch (e) {
       const error = e as AxiosError;
-      res.status(error.response?.status ?? 500).send(error.response?.data);
+      res
+        .status(error.response?.status ?? 500)
+        .json({ error: error.response?.data });
     }
   } else {
     res.status(405).send("Method Not Allowed");

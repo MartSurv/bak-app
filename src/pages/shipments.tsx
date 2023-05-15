@@ -1,4 +1,4 @@
-import { QueryKeys } from "@/interfaces";
+import { PageProps, QueryKeys } from "@/interfaces";
 import { Receiver, Shipment, ShipmentStatus } from "@/interfaces/lpexpress";
 import GetShipments from "@/internalApi/GetShipments";
 import GetSticker from "@/internalApi/GetSticker";
@@ -7,6 +7,7 @@ import { useMutation, useQuery } from "@tanstack/react-query";
 import { Button, Table, Typography } from "antd";
 import { ColumnsType, TablePaginationConfig } from "antd/es/table";
 import { FilterValue } from "antd/es/table/interface";
+import { AxiosError } from "axios";
 import Head from "next/head";
 import { useState } from "react";
 
@@ -19,7 +20,8 @@ interface TableParams {
   filters?: Record<string, FilterValue>;
 }
 
-export default withPageAuthRequired(function Shipments() {
+export default withPageAuthRequired(function Shipments(props: PageProps) {
+  const { notificationApi } = props;
   const [tableParams, setTableParams] = useState<TableParams>({
     pagination: {
       current: 1,
@@ -31,12 +33,26 @@ export default withPageAuthRequired(function Shipments() {
 
   const { data: shipments, isLoading } = useQuery({
     queryKey: [QueryKeys.SHIPMENTS, tableParams.pagination?.pageSize],
-    queryFn: () => GetShipments(tableParams.pagination?.pageSize ?? 10),
+    queryFn: () => GetShipments(tableParams.pagination?.pageSize ?? 5),
+    onError: (e) => {
+      const error = e as AxiosError;
+      notificationApi.error({
+        message: `Error ${error.response?.status ?? ""}`,
+        description: "Nepavyko gauti duomenų apie siuntas",
+      });
+    },
   });
 
   const { mutateAsync: getSticker, isLoading: stickerIsLoading } = useMutation({
     mutationKey: ["sticker"],
     mutationFn: (id: string) => GetSticker(id),
+    onError: (e) => {
+      const error = e as AxiosError;
+      notificationApi.error({
+        message: `Error ${error.response?.status ?? ""}`,
+        description: "Nepavyko gauti siuntos lipduko",
+      });
+    },
   });
 
   const handleDownloadSticker = async (shipment: Shipment) => {

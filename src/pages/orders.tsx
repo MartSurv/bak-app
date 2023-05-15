@@ -19,6 +19,7 @@ import InitiateShipment from "@/internalApi/InitiateShipment";
 import dayjs from "dayjs";
 import { PageProps, QueryKeys } from "@/interfaces";
 import { withPageAuthRequired } from "@auth0/nextjs-auth0/client";
+import { AxiosError } from "axios";
 
 interface FormData {
   name: string;
@@ -56,6 +57,13 @@ export default withPageAuthRequired(function Orders(props: PageProps) {
         });
         setIsModalOpen(false);
       },
+      onError: (e) => {
+        const error = e as AxiosError;
+        notificationApi.error({
+          message: `Error ${error.response?.status ?? ""}`,
+          description: "Siuntos inicijuoti nepavyko",
+        });
+      },
     });
 
   const { mutate: createOrder, isLoading: isCreateOrderLoading } = useMutation({
@@ -67,6 +75,13 @@ export default withPageAuthRequired(function Orders(props: PageProps) {
         description: "Siunta sukurta sėkmigai",
       });
       initiateShipment(data);
+    },
+    onError: (e) => {
+      const error = e as AxiosError;
+      notificationApi.error({
+        message: `Error ${error.response?.status ?? ""}`,
+        description: "Siuntos sukurti nepavyko",
+      });
     },
   });
 
