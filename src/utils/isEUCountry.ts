@@ -1,4 +1,4 @@
-const isEUCountry = (countryCode: string) =>
+const isEUCountry = (countryCode?: string) =>
   [
     "AT",
     "BE",
@@ -27,6 +27,6 @@ const isEUCountry = (countryCode: string) =>
     "SE",
     "SI",
     "SK",
-  ].includes(countryCode);
+  ].includes(countryCode ?? "");
 
 export default isEUCountry;

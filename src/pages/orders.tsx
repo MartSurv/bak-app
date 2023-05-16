@@ -1,9 +1,9 @@
 import {
   Button,
+  Collapse,
   DatePicker,
   Form,
   Input,
-  InputNumber,
   Modal,
   Table,
   Typography,
@@ -227,7 +227,6 @@ export default withPageAuthRequired(function Orders(props: PagePropsWithAuth) {
         postalCode: orderToSend.shipping_address.zip,
         locality: orderToSend.shipping_address.city,
         country: orderToSend.shipping_address.country_code,
-        weight: orderToSend.total_weight,
       });
     }
   }, [form, orderToSend]);
@@ -260,7 +259,21 @@ export default withPageAuthRequired(function Orders(props: PagePropsWithAuth) {
         title="Sukurti Siuntą"
         open={isModalOpen}
         onCancel={() => setIsModalOpen(false)}
-        footer={null}
+        width={700}
+        footer={
+          <div style={{ display: "flex", gap: 5 }}>
+            <Button
+              type="primary"
+              loading={isCreateOrderLoading || isInitiateShipmentLoading}
+              onClick={() => form.submit()}
+            >
+              Sukurti
+            </Button>
+            <Button type="primary" danger onClick={() => setIsModalOpen(false)}>
+              Atšaukti
+            </Button>
+          </div>
+        }
       >
         <Form
           form={form}
@@ -300,7 +313,9 @@ export default withPageAuthRequired(function Orders(props: PagePropsWithAuth) {
           <Form.Item label="Papildomas adresas" name="address2">
             <Input />
           </Form.Item>
-          <div style={{ display: "flex", gap: 8 }}>
+          <div
+            style={{ display: "flex", justifyContent: "space-between", gap: 8 }}
+          >
             <Form.Item
               label="Miestas"
               name="locality"
@@ -323,18 +338,34 @@ export default withPageAuthRequired(function Orders(props: PagePropsWithAuth) {
               <Input />
             </Form.Item>
           </div>
-          <Form.Item label="Siuntos svoris, g" name="weight">
-            <InputNumber className="w-100" />
-          </Form.Item>
-          <Form.Item>
-            <Button
-              type="primary"
-              htmlType="submit"
-              loading={isCreateOrderLoading || isInitiateShipmentLoading}
-            >
-              Sukurti
-            </Button>
-          </Form.Item>
+          {!isEUCountry(orderToSend?.shipping_address.country_code) && (
+            <Form.Item>
+              <Collapse>
+                <Collapse.Panel header="CN22" key="1">
+                  <Table
+                    size="small"
+                    columns={[
+                      { title: "Prekė", dataIndex: "title" },
+                      { title: "Kiekis", dataIndex: "quantity" },
+                      {
+                        title: "Kaina",
+                        dataIndex: "price",
+                        render: (value) => `€${value}`,
+                      },
+                      {
+                        title: "Svoris, kg",
+                        dataIndex: "grams",
+                        render: (value) => value / 1000,
+                      },
+                    ]}
+                    dataSource={orderToSend?.line_items}
+                    rowKey="id"
+                    pagination={false}
+                  />
+                </Collapse.Panel>
+              </Collapse>
+            </Form.Item>
+          )}
         </Form>
       </Modal>
     </>

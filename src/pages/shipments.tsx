@@ -9,6 +9,7 @@ import {
 } from "@/interfaces/lpexpress";
 import GetShipments from "@/internalApi/GetShipments";
 import createPDF from "@/utils/createPDF";
+import isEUCountry from "@/utils/isEUCountry";
 import { withPageAuthRequired } from "@auth0/nextjs-auth0/client";
 import { useQuery } from "@tanstack/react-query";
 import { Button, Collapse, DatePicker, Table, Typography } from "antd";
@@ -66,7 +67,11 @@ export default withPageAuthRequired(function Shipments(
     const blob = new Blob([pdfBytes], { type: "application/pdf" });
     const downloadLink = document.createElement("a");
     downloadLink.href = window.URL.createObjectURL(blob);
-    downloadLink.download = `lipdukai-${stickers.length}.pdf`;
+    if (stickers.length > 1) {
+      downloadLink.download = `lipdukai-${stickers.length}.pdf`;
+    } else {
+      downloadLink.download = `${stickers[0].itemId}.pdf`;
+    }
     downloadLink.style.display = "none";
     document.body.appendChild(downloadLink);
     downloadLink.click();
@@ -126,10 +131,13 @@ export default withPageAuthRequired(function Shipments(
     {
       title: "Dokumentai",
       dataIndex: "documents",
-      render: (value: Documents) => {
+      render: (value: Documents, record) => {
+        if (!record.id || isEUCountry(record.receiver.address.country)) {
+          return null;
+        }
         return (
           <Collapse>
-            <Panel header="CN22" key="1">
+            <Panel header="CN22" key={record.id}>
               <Table
                 size="small"
                 columns={[

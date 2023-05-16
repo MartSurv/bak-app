@@ -129,8 +129,8 @@ export interface LineItem {
 }
 
 export interface Order {
-  id: 5594965901658;
-  admin_graphql_api_id: "gid://shopify/Order/5594965901658";
+  id: number;
+  admin_graphql_api_id: string;
   app_id: 1608003;
   browser_ip: null;
   buyer_accepts_marketing: false;
@@ -142,10 +142,10 @@ export interface Order {
   client_details: null;
   closed_at: null;
   confirmed: true;
-  contact_email: "egnition_sample_78@egnition.com";
-  created_at: "2023-05-14T12:41:06+03:00";
-  currency: "EUR";
-  current_subtotal_price: "0.30";
+  contact_email: string;
+  created_at: string;
+  currency: string;
+  current_subtotal_price: string;
   current_subtotal_price_set: {
     shop_money: {
       amount: "0.30";
@@ -194,7 +194,7 @@ export interface Order {
   customer_locale: null;
   device_id: null;
   discount_codes: [];
-  email: "egnition_sample_78@egnition.com";
+  email: string;
   estimated_taxes: false;
   financial_status: FinancialStatus;
   fulfillment_status: null;
@@ -202,97 +202,97 @@ export interface Order {
   landing_site_ref: null;
   location_id: null;
   merchant_of_record_app_id: null;
-  name: "#1020";
+  name: string;
   note: null;
   note_attributes: [];
   number: 20;
   order_number: 1020;
-  order_status_url: "https://dd95c4-4.myshopify.com/75656429914/orders/b78de67a762a599c7ba2189162b9c20b/authenticate?key=162e6b93f298a3e4a0d6bc9c3ba774f1";
+  order_status_url: string;
   original_total_additional_fees_set: null;
   original_total_duties_set: null;
   payment_gateway_names: [];
   phone: null;
-  presentment_currency: "EUR";
-  processed_at: "2023-05-14T12:41:06+03:00";
+  presentment_currency: string;
+  processed_at: string;
   reference: null;
   referring_site: null;
   source_identifier: null;
-  source_name: "1608003";
+  source_name: string;
   source_url: null;
-  subtotal_price: "0.30";
+  subtotal_price: string;
   subtotal_price_set: {
     shop_money: {
-      amount: "0.30";
-      currency_code: "EUR";
+      amount: string;
+      currency_code: string;
     };
     presentment_money: {
-      amount: "0.30";
-      currency_code: "EUR";
+      amount: string;
+      currency_code: string;
     };
   };
   tags: "egnition-sample-data";
   tax_lines: [];
   taxes_included: false;
   test: false;
-  token: "b78de67a762a599c7ba2189162b9c20b";
-  total_discounts: "0.00";
+  token: string;
+  total_discounts: string;
   total_discounts_set: {
     shop_money: {
-      amount: "0.00";
-      currency_code: "EUR";
+      amount: string;
+      currency_code: string;
     };
     presentment_money: {
-      amount: "0.00";
-      currency_code: "EUR";
+      amount: string;
+      currency_code: string;
     };
   };
-  total_line_items_price: "0.30";
+  total_line_items_price: string;
   total_line_items_price_set: {
     shop_money: {
-      amount: "0.30";
-      currency_code: "EUR";
+      amount: string;
+      currency_code: string;
     };
     presentment_money: {
-      amount: "0.30";
-      currency_code: "EUR";
+      amount: string;
+      currency_code: string;
     };
   };
-  total_outstanding: "0.30";
-  total_price: "0.30";
+  total_outstanding: string;
+  total_price: string;
   total_price_set: {
     shop_money: {
-      amount: "0.30";
-      currency_code: "EUR";
+      amount: string;
+      currency_code: string;
     };
     presentment_money: {
-      amount: "0.30";
-      currency_code: "EUR";
+      amount: string;
+      currency_code: string;
     };
   };
   total_shipping_price_set: {
     shop_money: {
-      amount: "0.00";
-      currency_code: "EUR";
+      amount: string;
+      currency_code: string;
     };
     presentment_money: {
-      amount: "0.00";
-      currency_code: "EUR";
+      amount: string;
+      currency_code: string;
     };
   };
-  total_tax: "0.00";
+  total_tax: string;
   total_tax_set: {
     shop_money: {
-      amount: "0.00";
-      currency_code: "EUR";
+      amount: string;
+      currency_code: string;
     };
     presentment_money: {
-      amount: "0.00";
-      currency_code: "EUR";
+      amount: string;
+      currency_code: string;
     };
   };
-  total_tip_received: "0.00";
+  total_tip_received: string;
   total_weight: 0;
-  updated_at: "2023-05-14T12:42:08+03:00";
+  updated_at: string;
   user_id: null;
   billing_address: BillingAddress;
   customer: Customer;
@@ -302,20 +302,20 @@ export interface Order {
   payment_terms: null;
   refunds: [];
   shipping_address: {
-    first_name: "Xanthus";
-    address1: "P.O. Box 127, 7710 Vestibulum, Av.";
-    phone: "+62361743251";
-    city: "Dole";
-    zip: "00401";
+    first_name: string;
+    address1: string;
+    phone: string;
+    city: string;
+    zip: string;
     province: null;
-    country: "Indonesia";
-    last_name: "Beach";
+    country: string;
+    last_name: string;
     address2: null;
     company: null;
     latitude: null;
     longitude: null;
-    name: "Xanthus Beach";
-    country_code: "ID";
+    name: string;
+    country_code: string;
     province_code: null;
   };
   shipping_lines: [];
