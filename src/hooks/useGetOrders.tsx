@@ -2,10 +2,13 @@ import { QueryKeys } from "@/interfaces";
 import GetOrders from "@/internalApi/GetOrders";
 import { useQuery } from "@tanstack/react-query";
 
-const useGetOrders = () =>
+const useGetOrders = (
+  startDate?: string | undefined,
+  endDate?: string | undefined
+) =>
   useQuery({
-    queryKey: [QueryKeys.ORDERS],
-    queryFn: () => GetOrders(),
+    queryKey: [QueryKeys.ORDERS, startDate, endDate],
+    queryFn: () => GetOrders(startDate ?? "", endDate ?? ""),
   });
 
 export default useGetOrders;

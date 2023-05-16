@@ -1,6 +1,7 @@
 import { NextApiRequest, NextApiResponse } from "next";
 import { withApiAuthRequired } from "@auth0/nextjs-auth0";
 import axios, { AxiosError } from "axios";
+import queryString from "query-string";
 
 export default withApiAuthRequired(async function handler(
   req: NextApiRequest,
@@ -9,7 +10,18 @@ export default withApiAuthRequired(async function handler(
   if (req.method === "GET") {
     try {
       const { data } = await axios.get(
-        `${process.env.SHOPIFY_API_URL}/admin/api/2023-04/orders.json`,
+        `${
+          process.env.SHOPIFY_API_URL
+        }/admin/api/2023-04/orders.json?${queryString.stringify(
+          {
+            created_at_min: req.query.start,
+            created_at_max: req.query.end,
+          },
+          {
+            skipEmptyString: true,
+            skipNull: true,
+          }
+        )}`,
         {
           headers: {
             "X-Shopify-Access-Token": process.env.SHOPIFY_ACCESS_TOKEN,

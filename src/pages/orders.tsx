@@ -1,5 +1,6 @@
 import {
   Button,
+  DatePicker,
   Form,
   Input,
   InputNumber,
@@ -12,12 +13,14 @@ import type { ColumnsType, TablePaginationConfig } from "antd/es/table";
 import { BillingAddress, LineItem, Order } from "@/interfaces/order";
 import { useEffect, useState } from "react";
 import dayjs from "dayjs";
-import { PageProps } from "@/interfaces";
 import { withPageAuthRequired } from "@auth0/nextjs-auth0/client";
 import useInitiateShipment from "@/hooks/useInitiateShipment";
 import useCreateShipment from "@/hooks/useCreateShipment";
 import useGetOrders from "@/hooks/useGetOrders";
 import isEUCountry from "@/utils/isEUCountry";
+import useGetLocations from "@/hooks/useGetLocations";
+import { PagePropsWithAuth } from "@/interfaces";
+import { RangeValue } from "rc-picker/lib/interface";
 
 interface FormData {
   name: string;
@@ -33,9 +36,21 @@ interface FormData {
 
 const { useForm } = Form;
 const { Title, Text } = Typography;
+const { RangePicker } = DatePicker;
 
-export default withPageAuthRequired(function Orders(props: PageProps) {
-  const { notificationApi } = props;
+const determineEndDate = (dateRange: RangeValue<dayjs.Dayjs>) => {
+  if (
+    dateRange &&
+    dateRange?.[0]?.format("YYYY-MM-DD") ===
+      dateRange?.[1]?.format("YYYY-MM-DD")
+  ) {
+    return "";
+  }
+  return dateRange?.[1]?.format("YYYY-MM-DD");
+};
+
+export default withPageAuthRequired(function Orders(props: PagePropsWithAuth) {
+  const { notificationApi, user } = props;
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [orderToSend, setOrderToSend] = useState<Order>();
   const [form] = useForm<FormData>();
@@ -45,8 +60,15 @@ export default withPageAuthRequired(function Orders(props: PageProps) {
     showSizeChanger: true,
     pageSizeOptions: [10, 20, 50],
   });
+  const [dateRange, setDateRange] = useState<RangeValue<dayjs.Dayjs>>([
+    dayjs(),
+    dayjs(),
+  ]);
 
-  const { data: orders, isLoading: isOrdersLoading } = useGetOrders();
+  const { data: orders, isLoading: isOrdersLoading } = useGetOrders(
+    dateRange ? dateRange[0]?.format("YYYY-MM-DD") : "",
+    determineEndDate(dateRange)
+  );
 
   const { mutate: initiateShipment, isLoading: isInitiateShipmentLoading } =
     useInitiateShipment(notificationApi, () => setIsModalOpen(false));
@@ -55,6 +77,8 @@ export default withPageAuthRequired(function Orders(props: PageProps) {
     useCreateShipment(notificationApi, (data) =>
       initiateShipment([data.id ?? ""])
     );
+
+  const { data: locations } = useGetLocations();
 
   const handleSendOrderClick = (record: Order) => {
     setIsModalOpen(true);
@@ -65,24 +89,35 @@ export default withPageAuthRequired(function Orders(props: PageProps) {
     setPagination(pagination);
   };
 
+  const handleDateChange = (values: RangeValue<dayjs.Dayjs>) => {
+    if (values?.[0] && values?.[1]) {
+      setDateRange([values[0], values[1]]);
+    } else {
+      setDateRange([dayjs(), dayjs()]);
+    }
+  };
+
   const columns: ColumnsType<Order> = [
     {
       title: "Nr.",
       dataIndex: "order_number",
     },
     {
-      title: "Data",
+      title: "Užsakymo data",
       dataIndex: "created_at",
       render: (value) => dayjs(value).format("YYYY-MM-DD HH:MM"),
     },
     {
       title: "Užsakovas",
       dataIndex: "billing_address",
-      render: (billingAddress: BillingAddress) => {
+      render: (billingAddress: BillingAddress, record) => {
         return (
           <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
-            <Text>{`Vardas: ${billingAddress.name}`}</Text>
-            <Text>{`Šalis: ${billingAddress.country}`}</Text>
+            <Text>{`${billingAddress.name}`}</Text>
+            <Text>{`${record.email}`}</Text>
+            <Text>{`${billingAddress.phone}`}</Text>
+            <Text>{`${billingAddress.address1}`}</Text>
+            <Text>{`${billingAddress.city}, ${billingAddress.zip}, ${billingAddress.country_code}`}</Text>
           </div>
         );
       },
@@ -108,6 +143,13 @@ export default withPageAuthRequired(function Orders(props: PageProps) {
       },
     },
     {
+      title: "Statusas",
+      dataIndex: "financial_status",
+      render: (value: string) => (
+        <Text style={{ textTransform: "capitalize" }}>{value}</Text>
+      ),
+    },
+    {
       title: "Veiksmai",
       key: "action",
       render: (_, record) => {
@@ -121,7 +163,11 @@ export default withPageAuthRequired(function Orders(props: PageProps) {
   ];
 
   const onFinish = (values: FormData) => {
-    if (orderToSend) {
+    const bussinessLocation = locations?.find(
+      (location) => location.name === "Default"
+    );
+
+    if (orderToSend && bussinessLocation && user.email && user.name) {
       const cn22Form = {
         cn22Form: {
           parcelType: "Sell",
@@ -148,17 +194,19 @@ export default withPageAuthRequired(function Orders(props: PageProps) {
           },
           name: values.name,
           phone: values.phone,
+          email: values.email,
         },
         sender: {
           address: {
-            address1: "Adresas",
-            country: "LT",
-            postalCode: "49345",
-            locality: "Kaunas",
+            street: bussinessLocation.address1.split(".")[0],
+            building: bussinessLocation.address1.split(".")[1],
+            country: bussinessLocation.country_code,
+            postalCode: bussinessLocation.zip,
+            locality: bussinessLocation.city,
           },
-          email: "martynas.survila@stud.vdu.lt",
-          name: "Mart Surv",
-          phone: "+37060000000",
+          email: user.email,
+          name: user.name,
+          phone: bussinessLocation.phone,
         },
         documents: isEUCountry(orderToSend.shipping_address.country_code)
           ? {}
@@ -190,14 +238,24 @@ export default withPageAuthRequired(function Orders(props: PageProps) {
         <title>Užsakymai</title>
       </Head>
       <Title>Užsakymai</Title>
-      <Table
-        columns={columns}
-        dataSource={orders ?? []}
-        loading={isOrdersLoading}
-        rowKey="id"
-        pagination={pagination}
-        onChange={(pagination) => handlePagination(pagination)}
-      />
+      <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+        <div style={{ display: "flex", gap: 10 }}>
+          <RangePicker
+            style={{ alignSelf: "flex-start" }}
+            format={"YYYY-MM-DD"}
+            value={dateRange}
+            onCalendarChange={handleDateChange}
+          />
+        </div>
+        <Table
+          columns={columns}
+          dataSource={orders ?? []}
+          loading={isOrdersLoading}
+          rowKey="id"
+          pagination={pagination}
+          onChange={(pagination) => handlePagination(pagination)}
+        />
+      </div>
       <Modal
         title="Sukurti Siuntą"
         open={isModalOpen}

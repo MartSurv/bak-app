@@ -26,7 +26,9 @@ export interface Address {
   country: string;
   postalCode: string;
   locality: string;
-  address1: string;
+  address1?: string;
+  street?: string;
+  building?: string;
 }
 
 export interface Receiver {
@@ -50,13 +52,15 @@ export enum ShipmentStatus {
   PENDING = "PENDING",
 }
 
+export interface Documents {
+  cn22Form?: Cn22Form;
+}
+
 export interface Shipment {
   template: number;
   weight: number;
   partCount: number;
-  documents: {
-    cn22Form?: Cn22Form;
-  };
+  documents: Documents;
   sender?: Sender;
   receiver: Receiver;
   additionalServices?: [

@@ -1,12 +1,17 @@
 import useGetSticker from "@/hooks/useGetSticker";
 import useInitiateShipment from "@/hooks/useInitiateShipment";
-import { PageProps, QueryKeys } from "@/interfaces";
-import { Receiver, Shipment, ShipmentStatus } from "@/interfaces/lpexpress";
+import { PagePropsWithAuth, QueryKeys } from "@/interfaces";
+import {
+  Documents,
+  Receiver,
+  Shipment,
+  ShipmentStatus,
+} from "@/interfaces/lpexpress";
 import GetShipments from "@/internalApi/GetShipments";
 import createPDF from "@/utils/createPDF";
 import { withPageAuthRequired } from "@auth0/nextjs-auth0/client";
 import { useQuery } from "@tanstack/react-query";
-import { Button, DatePicker, Table, Typography } from "antd";
+import { Button, Collapse, DatePicker, Table, Typography } from "antd";
 import { ColumnsType, TablePaginationConfig } from "antd/es/table";
 import { AxiosError } from "axios";
 import dayjs from "dayjs";
@@ -14,10 +19,13 @@ import Head from "next/head";
 import { RangeValue } from "rc-picker/lib/interface";
 import { useState } from "react";
 
-const { Title } = Typography;
+const { Title, Text } = Typography;
 const { RangePicker } = DatePicker;
+const { Panel } = Collapse;
 
-export default withPageAuthRequired(function Shipments(props: PageProps) {
+export default withPageAuthRequired(function Shipments(
+  props: PagePropsWithAuth
+) {
   const { notificationApi } = props;
   const [selectedShipmentIds, setSelectedShipmentIds] = useState<string[]>([]);
   const [dateRange, setDateRange] = useState<RangeValue<dayjs.Dayjs>>([
@@ -89,25 +97,59 @@ export default withPageAuthRequired(function Shipments(props: PageProps) {
       dataIndex: "receiver",
       render: (value: Receiver) => (
         <div style={{ display: "flex", flexDirection: "column", gap: 5 }}>
-          <span>{value.name}</span>
-          <span>{value.email}</span>
-          <span>{value.phone}</span>
+          <Text>{value.name}</Text>
+          {value.email && <Text>{value.email}</Text>}
+          {value.phone && <Text>{value.phone}</Text>}
+          <Text>{value.address.address1}</Text>
+          <Text>{`${value.address.locality}, ${value.address.postalCode}, ${value.address.country}`}</Text>
         </div>
       ),
     },
     {
-      title: "Adresas",
-      dataIndex: "receiver",
+      title: "Siuntėjas",
+      dataIndex: "sender",
       render: (value: Receiver) => (
         <div style={{ display: "flex", flexDirection: "column", gap: 5 }}>
-          <span>{value.address.address1}</span>
-          <span>{`${value.address.locality}, ${value.address.postalCode}, ${value.address.country}`}</span>
+          {value.email && <Text>{value.email}</Text>}
+          {value.phone && <Text>{value.phone}</Text>}
+          {value.address.street && value.address.building && (
+            <Text>{`${value.address.street} ${value.address.building}`}</Text>
+          )}
+          <Text>{`${value.address.locality}, ${value.address.postalCode}, ${value.address.country}`}</Text>
         </div>
       ),
     },
     {
       title: "Sukūrimo data",
       dataIndex: "createdOn",
+    },
+    {
+      title: "Dokumentai",
+      dataIndex: "documents",
+      render: (value: Documents) => {
+        return (
+          <Collapse>
+            <Panel header="CN22" key="1">
+              <Table
+                size="small"
+                columns={[
+                  { title: "Prekė", dataIndex: "summary" },
+                  { title: "Kiekis", dataIndex: "quantity" },
+                  {
+                    title: "Kaina",
+                    dataIndex: "amount",
+                    render: (value) => `€${value}`,
+                  },
+                  { title: "Svoris", dataIndex: "weight" },
+                ]}
+                dataSource={value.cn22Form?.cnParts ?? []}
+                rowKey="id"
+                pagination={false}
+              />
+            </Panel>
+          </Collapse>
+        );
+      },
     },
     {
       title: "Statusas",
