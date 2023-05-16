@@ -7,7 +7,7 @@ import { AxiosError } from "axios";
 const useGetSticker = (notificationApi: NotificationInstance) =>
   useMutation({
     mutationKey: [QueryKeys.STICKER],
-    mutationFn: (id: string) => GetSticker(id),
+    mutationFn: (id: string[]) => GetSticker(id),
     onError: (e) => {
       const error = e as AxiosError;
       notificationApi.error({

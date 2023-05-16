@@ -55,7 +55,7 @@ export interface Shipment {
   weight: number;
   partCount: number;
   documents: {
-    cn22Form: Cn22Form;
+    cn22Form?: Cn22Form;
   };
   sender?: Sender;
   receiver: Receiver;

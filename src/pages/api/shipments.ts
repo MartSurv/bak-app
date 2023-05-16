@@ -24,6 +24,7 @@ export default withApiAuthRequired(async function handler(
           },
         })
         .limit(Number(req?.query.pageSize) ?? 10)
+        .sort({ _id: -1 })
         .toArray();
 
       res.status(200).json(shipments);

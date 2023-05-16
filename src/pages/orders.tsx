@@ -8,7 +8,7 @@ import {
   Typography,
 } from "antd";
 import Head from "next/head";
-import type { ColumnsType } from "antd/es/table";
+import type { ColumnsType, TablePaginationConfig } from "antd/es/table";
 import { BillingAddress, LineItem, Order } from "@/interfaces/order";
 import { useEffect, useState } from "react";
 import dayjs from "dayjs";
@@ -17,6 +17,7 @@ import { withPageAuthRequired } from "@auth0/nextjs-auth0/client";
 import useInitiateShipment from "@/hooks/useInitiateShipment";
 import useCreateShipment from "@/hooks/useCreateShipment";
 import useGetOrders from "@/hooks/useGetOrders";
+import isEUCountry from "@/utils/isEUCountry";
 
 interface FormData {
   name: string;
@@ -38,6 +39,12 @@ export default withPageAuthRequired(function Orders(props: PageProps) {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [orderToSend, setOrderToSend] = useState<Order>();
   const [form] = useForm<FormData>();
+  const [pagination, setPagination] = useState<TablePaginationConfig>({
+    current: 1,
+    pageSize: 10,
+    showSizeChanger: true,
+    pageSizeOptions: [10, 20, 50],
+  });
 
   const { data: orders, isLoading: isOrdersLoading } = useGetOrders();
 
@@ -52,6 +59,10 @@ export default withPageAuthRequired(function Orders(props: PageProps) {
   const handleSendOrderClick = (record: Order) => {
     setIsModalOpen(true);
     setOrderToSend(record);
+  };
+
+  const handlePagination = (pagination: TablePaginationConfig) => {
+    setPagination(pagination);
   };
 
   const columns: ColumnsType<Order> = [
@@ -83,11 +94,7 @@ export default withPageAuthRequired(function Orders(props: PageProps) {
         return (
           <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
             {lineItems.map((lineItem) => {
-              return (
-                <Text
-                  key={lineItem.id}
-                >{`${lineItem.title} - ${lineItem.price} ${lineItem.price_set.shop_money.currency_code}`}</Text>
-              );
+              return <Text key={lineItem.id}>{lineItem.title}</Text>;
             })}
           </div>
         );
@@ -114,47 +121,51 @@ export default withPageAuthRequired(function Orders(props: PageProps) {
   ];
 
   const onFinish = (values: FormData) => {
-    createOrder({
-      template: 74,
-      partCount: 1,
-      receiver: {
-        address: {
-          country: values.country,
-          postalCode: values.postalCode,
-          locality: values.locality,
-          address1: values.address1,
-        },
-        name: values.name,
-        phone: values.phone,
-      },
-      sender: {
-        address: {
-          address1: "Adresas",
-          country: "LT",
-          postalCode: "49345",
-          locality: "Kaunas",
-        },
-        email: "martynas.survila@stud.vdu.lt",
-        name: "Mart Surv",
-        phone: "+37060000000",
-      },
-      documents: {
+    if (orderToSend) {
+      const cn22Form = {
         cn22Form: {
           parcelType: "Sell",
-          cnParts: [
-            {
-              amount: "0.30",
-              countryCode: "LT",
-              currencyCode: "EUR",
-              weight: 50,
-              quantity: 1,
-              summary: "clothes",
-            },
-          ],
+          cnParts: orderToSend.line_items.map((item) => ({
+            amount: item.price,
+            countryCode: "LT",
+            currencyCode: "EUR",
+            weight: item.grams / 1000,
+            quantity: item.quantity,
+            summary: item.title,
+          })),
         },
-      },
-      weight: 50,
-    });
+      };
+
+      createOrder({
+        template: 74,
+        partCount: 1,
+        receiver: {
+          address: {
+            country: values.country,
+            postalCode: values.postalCode,
+            locality: values.locality,
+            address1: values.address1,
+          },
+          name: values.name,
+          phone: values.phone,
+        },
+        sender: {
+          address: {
+            address1: "Adresas",
+            country: "LT",
+            postalCode: "49345",
+            locality: "Kaunas",
+          },
+          email: "martynas.survila@stud.vdu.lt",
+          name: "Mart Surv",
+          phone: "+37060000000",
+        },
+        documents: isEUCountry(orderToSend.shipping_address.country_code)
+          ? {}
+          : cn22Form,
+        weight: 50,
+      });
+    }
   };
 
   useEffect(() => {
@@ -184,6 +195,8 @@ export default withPageAuthRequired(function Orders(props: PageProps) {
         dataSource={orders ?? []}
         loading={isOrdersLoading}
         rowKey="id"
+        pagination={pagination}
+        onChange={(pagination) => handlePagination(pagination)}
       />
       <Modal
         title="Sukurti Siuntą"
@@ -196,7 +209,6 @@ export default withPageAuthRequired(function Orders(props: PageProps) {
           name="shipment-form"
           layout="vertical"
           onFinish={onFinish}
-          // onFinishFailed={onFinishFailed}
           autoComplete="off"
         >
           <Form.Item

@@ -3,12 +3,11 @@ import useInitiateShipment from "@/hooks/useInitiateShipment";
 import { PageProps, QueryKeys } from "@/interfaces";
 import { Receiver, Shipment, ShipmentStatus } from "@/interfaces/lpexpress";
 import GetShipments from "@/internalApi/GetShipments";
-import GetSticker from "@/internalApi/GetSticker";
+import createPDF from "@/utils/createPDF";
 import { withPageAuthRequired } from "@auth0/nextjs-auth0/client";
 import { useQuery } from "@tanstack/react-query";
 import { Button, DatePicker, Table, Typography } from "antd";
 import { ColumnsType, TablePaginationConfig } from "antd/es/table";
-import { FilterValue } from "antd/es/table/interface";
 import { AxiosError } from "axios";
 import dayjs from "dayjs";
 import Head from "next/head";
@@ -18,36 +17,23 @@ import { useState } from "react";
 const { Title } = Typography;
 const { RangePicker } = DatePicker;
 
-interface TableParams {
-  pagination?: TablePaginationConfig;
-  sortField?: string;
-  sortOrder?: string;
-  filters?: Record<string, FilterValue>;
-}
-
 export default withPageAuthRequired(function Shipments(props: PageProps) {
   const { notificationApi } = props;
+  const [selectedShipmentIds, setSelectedShipmentIds] = useState<string[]>([]);
   const [dateRange, setDateRange] = useState<RangeValue<dayjs.Dayjs>>([
     dayjs(),
     dayjs(),
   ]);
-  const [tableParams, setTableParams] = useState<TableParams>({
-    pagination: {
-      current: 1,
-      pageSize: 5,
-      showSizeChanger: true,
-      pageSizeOptions: [5, 10, 15, 20, 50],
-    },
+  const [pagination, setPagination] = useState<TablePaginationConfig>({
+    current: 1,
+    pageSize: 10,
+    showSizeChanger: true,
+    pageSizeOptions: [10, 20, 50],
   });
 
   const { data: shipmentData, isLoading } = useQuery({
-    queryKey: [
-      QueryKeys.SHIPMENTS,
-      tableParams.pagination?.pageSize,
-      dateRange,
-    ],
-    queryFn: () =>
-      GetShipments(tableParams.pagination?.pageSize ?? 5, dateRange),
+    queryKey: [QueryKeys.SHIPMENTS, pagination?.pageSize, dateRange],
+    queryFn: () => GetShipments(pagination?.pageSize ?? 5, dateRange),
     onError: (e) => {
       const error = e as AxiosError;
       notificationApi.error({
@@ -63,29 +49,33 @@ export default withPageAuthRequired(function Shipments(props: PageProps) {
   const { mutate: initiateShipment, isLoading: isInitiateShipmentLoading } =
     useInitiateShipment(notificationApi);
 
-  const handleDownloadSticker = async (shipment: Shipment) => {
-    if (shipment.id) {
-      const sticker = await getSticker(shipment.id);
+  const handleDownloadSticker = async (ids: string[]) => {
+    const stickers = await getSticker(ids);
 
-      const linkSource = `data:application/pdf;base64,${sticker[0].label}`;
-      const downloadLink = document.createElement("a");
-      const fileName = `${sticker[0].itemId}.pdf`;
+    const pdfDoc = await createPDF(stickers);
 
-      downloadLink.href = linkSource;
-      downloadLink.download = fileName;
-      downloadLink.click();
-    }
+    const pdfBytes = await pdfDoc.save({ addDefaultPage: false });
+    const blob = new Blob([pdfBytes], { type: "application/pdf" });
+    const downloadLink = document.createElement("a");
+    downloadLink.href = window.URL.createObjectURL(blob);
+    downloadLink.download = `lipdukai-${stickers.length}.pdf`;
+    downloadLink.style.display = "none";
+    document.body.appendChild(downloadLink);
+    downloadLink.click();
+    document.body.removeChild(downloadLink);
   };
 
-  const handleTableChange = (pagination: TablePaginationConfig) => {
-    setTableParams({ pagination });
+  const handlePagination = (pagination: TablePaginationConfig) => {
+    setPagination(pagination);
   };
 
   const handleDateChange = (values: RangeValue<dayjs.Dayjs>) => {
     if (values?.[0] && values?.[1]) {
       setDateRange([values[0], values[1]]);
+      setSelectedShipmentIds([]);
     } else {
       setDateRange([dayjs(), dayjs()]);
+      setSelectedShipmentIds([]);
     }
   };
 
@@ -144,7 +134,7 @@ export default withPageAuthRequired(function Shipments(props: PageProps) {
             <Button
               type="primary"
               loading={isStickerLoading}
-              onClick={() => handleDownloadSticker(record)}
+              onClick={() => handleDownloadSticker([record.id ?? ""])}
             >
               Atsisiųsti lipduką
             </Button>
@@ -161,19 +151,36 @@ export default withPageAuthRequired(function Shipments(props: PageProps) {
       </Head>
       <Title>Siuntos</Title>
       <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
-        <RangePicker
-          style={{ alignSelf: "flex-start" }}
-          format={"YYYY-MM-DD"}
-          value={dateRange}
-          onCalendarChange={handleDateChange}
-        />
+        <div style={{ display: "flex", gap: 10 }}>
+          <RangePicker
+            style={{ alignSelf: "flex-start" }}
+            format={"YYYY-MM-DD"}
+            value={dateRange}
+            onCalendarChange={handleDateChange}
+          />
+          <Button
+            disabled={selectedShipmentIds.length === 0}
+            type="primary"
+            loading={isStickerLoading}
+            onClick={() => handleDownloadSticker(selectedShipmentIds)}
+          >
+            {`Atsisiųsti lipdukus (${selectedShipmentIds.length})`}
+          </Button>
+        </div>
         <Table
           columns={columns}
           dataSource={shipmentData ?? []}
           loading={isLoading}
-          pagination={tableParams.pagination}
+          pagination={pagination}
           rowKey="id"
-          onChange={(pagination) => handleTableChange(pagination)}
+          rowSelection={{
+            type: "checkbox",
+            onChange: (selectedRowKeys) => {
+              setSelectedShipmentIds(selectedRowKeys as string[]);
+            },
+            selectedRowKeys: selectedShipmentIds,
+          }}
+          onChange={(pagination) => handlePagination(pagination)}
         />
       </div>
     </>
