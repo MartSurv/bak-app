@@ -13,16 +13,15 @@ export default withApiAuthRequired(async function handler(
       const { data } = await axios.post<LpexpressToken>(
         `${process.env.LPEXPRESS_API_URL}/oauth/token?scope=read+write&grant_type=password&clientSystem=PUBLIC&username=${process.env.LPEXPRESS_USERNAME}&password=${process.env.LPEXPRESS_PASSWORD}`
       );
-      res.status(200).send(data);
-      // const { data: labelData } = await axios.get(
-      //   `${process.env.LPEXPRESS_API_URL}/api/v1/documents/item/sticker/?itemId=${req.query.id}&layout=LAYOUT_10x15`,
-      //   {
-      //     headers: {
-      //       Authorization: `Bearer ${data.access_token}`,
-      //     },
-      //   }
-      // );
-      // res.status(200).send(labelData);
+      const { data: labelData } = await axios.get(
+        `${process.env.LPEXPRESS_API_URL}/api/v1/documents/item/sticker/?itemId=${req.query.id}&layout=LAYOUT_10x15`,
+        {
+          headers: {
+            Authorization: `Bearer ${data.access_token}`,
+          },
+        }
+      );
+      res.status(200).send(labelData);
     } catch (e) {
       const error = e as AxiosError;
       res
