@@ -7,6 +7,7 @@ import "antd/dist/reset.css";
 import { notification } from "antd";
 import dayjs from "dayjs";
 import utc from "dayjs/plugin/utc";
+import "./app.css";
 
 dayjs.extend(utc);
 
