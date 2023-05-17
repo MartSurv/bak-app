@@ -1,7 +1,8 @@
-import { Path } from "@/interfaces";
 import { useUser, withPageAuthRequired } from "@auth0/nextjs-auth0/client";
 import { useRouter } from "next/router";
 import { useEffect } from "react";
+
+import { Path } from "@/interfaces";
 
 export default withPageAuthRequired(function Home() {
   const { push } = useRouter();

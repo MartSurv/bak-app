@@ -1,3 +1,17 @@
 {
-  "extends": ["next/core-web-vitals", "eslint-config-next"]
+  "extends": ["next/core-web-vitals", "eslint-config-next"],
+  "rules": {
+    "import/order": [
+      "warn",
+      {
+        "groups": [
+          ["external", "builtin"],
+          "internal",
+          ["parent", "sibling", "index"]
+        ],
+        "newlines-between": "always",
+        "alphabetize": { "order": "asc" }
+      }
+    ]
+  }
 }

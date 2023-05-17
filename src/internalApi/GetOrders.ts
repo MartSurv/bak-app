@@ -1,12 +1,17 @@
-import { Order } from "@/interfaces/order";
 import axios from "axios";
 import queryString from "query-string";
+
+import { FinancialStatus, Order } from "@/interfaces/order";
 
 interface GetOrdersResponse {
   orders: Order[];
 }
 
-const GetOrders = (startDate: string, endDate: string) =>
+const GetOrders = (
+  startDate: string,
+  endDate: string,
+  financialStatus?: FinancialStatus
+) =>
   axios
     .get<GetOrdersResponse>(
       `${window.location.protocol}//${
@@ -15,6 +20,7 @@ const GetOrders = (startDate: string, endDate: string) =>
         {
           start: startDate,
           end: endDate,
+          financialStatus,
         },
         {
           skipEmptyString: true,

@@ -1,9 +1,10 @@
-import { Shipment } from "@/interfaces/lpexpress";
 import axios from "axios";
 import dayjs from "dayjs";
 import { RangeValue } from "rc-picker/lib/interface";
 
-const GetShipments = (count: number, dateRange: RangeValue<dayjs.Dayjs>) =>
+import { Shipment } from "@/interfaces/lpexpress";
+
+const GetShipments = (dateRange: RangeValue<dayjs.Dayjs>) =>
   axios
     .get<Shipment[]>(
       `${window.location.protocol}//${

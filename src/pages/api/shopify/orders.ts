@@ -1,6 +1,6 @@
-import { NextApiRequest, NextApiResponse } from "next";
 import { withApiAuthRequired } from "@auth0/nextjs-auth0";
 import axios, { AxiosError } from "axios";
+import { NextApiRequest, NextApiResponse } from "next";
 import queryString from "query-string";
 
 export default withApiAuthRequired(async function handler(
@@ -16,6 +16,7 @@ export default withApiAuthRequired(async function handler(
           {
             created_at_min: req.query.start,
             created_at_max: req.query.end,
+            financial_status: req.query.financialStatus,
           },
           {
             skipEmptyString: true,

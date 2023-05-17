@@ -1,52 +1,43 @@
+import { withPageAuthRequired } from "@auth0/nextjs-auth0/client";
 import {
   Button,
-  Collapse,
   DatePicker,
   Form,
-  Input,
   Modal,
+  Select,
   Table,
   Typography,
+  message,
 } from "antd";
-import Head from "next/head";
-import type { ColumnsType, TablePaginationConfig } from "antd/es/table";
-import { BillingAddress, LineItem, Order } from "@/interfaces/order";
-import { useEffect, useState } from "react";
+import type { TablePaginationConfig } from "antd/es/table";
 import dayjs from "dayjs";
-import { withPageAuthRequired } from "@auth0/nextjs-auth0/client";
-import useInitiateShipment from "@/hooks/useInitiateShipment";
-import useCreateShipment from "@/hooks/useCreateShipment";
-import useGetOrders from "@/hooks/useGetOrders";
-import isEUCountry from "@/utils/isEUCountry";
-import useGetLocations from "@/hooks/useGetLocations";
-import { PagePropsWithAuth } from "@/interfaces";
+import Head from "next/head";
 import { RangeValue } from "rc-picker/lib/interface";
+import { useEffect, useState } from "react";
+
 import CreateShipmentForm, {
   CreateShipmentFormData,
 } from "@/components/CreateShipmentForm/CreateShipmentForm";
-
-const { useForm } = Form;
-const { Title, Text } = Typography;
-const { RangePicker } = DatePicker;
-
-const determineEndDate = (dateRange: RangeValue<dayjs.Dayjs>) => {
-  if (
-    dateRange &&
-    dateRange?.[0]?.format("YYYY-MM-DD") ===
-      dateRange?.[1]?.format("YYYY-MM-DD")
-  ) {
-    return "";
-  }
-  return dateRange?.[1]?.format("YYYY-MM-DD");
-};
+import useCreateShipment from "@/hooks/useCreateShipment";
+import useGetLocations from "@/hooks/useGetLocations";
+import useGetOrders from "@/hooks/useGetOrders";
+import useInitiateShipment from "@/hooks/useInitiateShipment";
+import { PagePropsWithAuth } from "@/interfaces";
+import { FinancialStatus } from "@/interfaces/order";
+import { Order } from "@/interfaces/order";
+import isEUCountry from "@/utils/isEUCountry";
+import ordersColumns from "@/utils/ordersColumns";
 
 export default withPageAuthRequired(function Orders(props: PagePropsWithAuth) {
+  let successfullyCreatedShipmentsCount = 0;
   const { notificationApi, user } = props;
+  const [messageApi, contextHolder] = message.useMessage();
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [orderToSend, setOrderToSend] = useState<Order>();
-  const [form] = useForm<CreateShipmentFormData>();
+  const [form] = Form.useForm<CreateShipmentFormData>();
   const [selectedOrdersIds, setSelectedOrdersIds] = useState<string[]>([]);
   const [selectedOrders, setSelectedOrders] = useState<Order[]>([]);
+  const [selectedStatus, setSelectedStatus] = useState<FinancialStatus>();
   const [pagination, setPagination] = useState<TablePaginationConfig>({
     current: 1,
     pageSize: 10,
@@ -59,20 +50,21 @@ export default withPageAuthRequired(function Orders(props: PagePropsWithAuth) {
   ]);
 
   const { data: orders, isLoading: isOrdersLoading } = useGetOrders(
-    dateRange ? dateRange[0]?.format("YYYY-MM-DD") : "",
-    determineEndDate(dateRange)
+    dateRange?.[0]?.format("YYYY-MM-DD"),
+    dateRange?.[1]?.add(1, "day").format("YYYY-MM-DD"),
+    selectedStatus
   );
-
   const {
-    mutate: initiateShipment,
     mutateAsync: initiateShipmentAsync,
     isLoading: isInitiateShipmentLoading,
   } = useInitiateShipment(notificationApi, () => setIsModalOpen(false));
-
-  const { mutateAsync: createOrderAsync, isLoading: isCreateOrderLoading } =
+  const { mutateAsync: createShipmentAsync, isLoading: isCreateOrderLoading } =
     useCreateShipment(notificationApi);
-
   const { data: locations } = useGetLocations();
+
+  const bussinessLocation = locations?.find(
+    (location) => location.name === "Default"
+  );
 
   const handleSendOrderClick = (record: Order) => {
     setIsModalOpen(true);
@@ -91,76 +83,49 @@ export default withPageAuthRequired(function Orders(props: PagePropsWithAuth) {
     }
   };
 
-  const columns: ColumnsType<Order> = [
-    {
-      title: "Nr.",
-      dataIndex: "order_number",
-    },
-    {
-      title: "Užsakymo data",
-      dataIndex: "created_at",
-      render: (value) => dayjs(value).format("YYYY-MM-DD HH:MM"),
-    },
-    {
-      title: "Užsakovas",
-      dataIndex: "billing_address",
-      render: (billingAddress: BillingAddress, record) => {
-        return (
-          <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
-            <Text>{`${billingAddress.name}`}</Text>
-            <Text>{`${record.email}`}</Text>
-            <Text>{`${billingAddress.phone}`}</Text>
-            <Text>{`${billingAddress.address1}`}</Text>
-            <Text>{`${billingAddress.city}, ${billingAddress.zip}, ${billingAddress.country_code}`}</Text>
-          </div>
-        );
-      },
-    },
-    {
-      title: "Prekės",
-      dataIndex: "line_items",
-      render: (lineItems: LineItem[]) => {
-        return (
-          <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
-            {lineItems.map((lineItem) => {
-              return <Text key={lineItem.id}>{lineItem.title}</Text>;
-            })}
-          </div>
-        );
-      },
-    },
-    {
-      title: "Suma",
-      dataIndex: "total_price",
-      render: (value, record) => {
-        return `${value} ${record.currency}`;
-      },
-    },
-    {
-      title: "Statusas",
-      dataIndex: "financial_status",
-      render: (value: string) => (
-        <Text style={{ textTransform: "capitalize" }}>{value}</Text>
+  const createMultipleShipments = async () => {
+    messageApi.open({
+      key: 1,
+      type: "loading",
+      content: <div>Vykdomas siuntų formavimas ir inicijavimas</div>,
+      duration: 0,
+    });
+
+    for (const order of selectedOrders) {
+      await createShipment(undefined, order);
+    }
+
+    messageApi.destroy(1);
+    message.open({
+      key: 2,
+      type: "info",
+      content: (
+        <div>
+          <Typography.Text>
+            Siuntų formavimas ir inicijavimas baigtas
+          </Typography.Text>
+          <br />
+          <br />
+          <Typography.Text>Sėkmingai suformuota siuntų: </Typography.Text>
+          <Typography.Text strong>
+            {successfullyCreatedShipmentsCount}
+          </Typography.Text>
+          <br />
+          Nesėkmingai suformuota siuntų:
+          <Typography.Text strong>
+            {selectedOrders.length - successfullyCreatedShipmentsCount}
+          </Typography.Text>
+        </div>
       ),
-    },
-    {
-      title: "Veiksmai",
-      key: "action",
-      render: (_, record) => {
-        return (
-          <Button type="primary" onClick={() => handleSendOrderClick(record)}>
-            Sukurti Siuntą
-          </Button>
-        );
-      },
-    },
-  ];
+      duration: 0,
+      onClose: () => messageApi.destroy(2),
+    });
+  };
 
-  const onFinish = async (values: CreateShipmentFormData) => {
-    const bussinessLocation = locations?.find(
-      (location) => location.name === "Default"
-    );
-
+  const createShipment = async (
+    values: CreateShipmentFormData | undefined,
+    orderToSend?: Order
+  ) => {
     if (orderToSend && bussinessLocation && user.email && user.name) {
       const cn22Form = {
         cn22Form: {
@@ -176,37 +141,46 @@ export default withPageAuthRequired(function Orders(props: PagePropsWithAuth) {
         },
       };
 
-      await createOrderAsync({
-        template: 74,
-        partCount: 1,
-        receiver: {
-          address: {
-            country: values.country,
-            postalCode: values.postalCode,
-            locality: values.locality,
-            address1: values.address1,
+      try {
+        const shipmentData = await createShipmentAsync({
+          template: 74,
+          partCount: 1,
+          receiver: {
+            address: {
+              country:
+                values?.country || orderToSend.shipping_address.country_code,
+              postalCode:
+                values?.postalCode || orderToSend.shipping_address.zip,
+              locality: values?.locality || orderToSend.shipping_address.city,
+              address1:
+                values?.address1 || orderToSend.shipping_address.address1,
+            },
+            name: values?.name || orderToSend.shipping_address.name,
+            phone: values?.phone || orderToSend.shipping_address.phone,
+            email: values?.email || orderToSend.email,
           },
-          name: values.name,
-          phone: values.phone,
-          email: values.email,
-        },
-        sender: {
-          address: {
-            street: bussinessLocation.address1.split(".")[0],
-            building: bussinessLocation.address1.split(".")[1],
-            country: bussinessLocation.country_code,
-            postalCode: bussinessLocation.zip,
-            locality: bussinessLocation.city,
+          sender: {
+            address: {
+              street: bussinessLocation.address1.split(".")[0],
+              building: bussinessLocation.address1.split(".")[1],
+              country: bussinessLocation.country_code,
+              postalCode: bussinessLocation.zip,
+              locality: bussinessLocation.city,
+            },
+            email: user.email,
+            name: user.name,
+            phone: bussinessLocation.phone,
           },
-          email: user.email,
-          name: user.name,
-          phone: bussinessLocation.phone,
-        },
-        documents: isEUCountry(orderToSend.shipping_address.country_code)
-          ? {}
-          : cn22Form,
-        weight: 50,
-      }).then((data) => initiateShipment([data.id ?? ""]));
+          documents: isEUCountry(orderToSend.shipping_address.country_code)
+            ? {}
+            : cn22Form,
+          weight: 50,
+        });
+        await initiateShipmentAsync([shipmentData.id ?? ""]);
+        successfullyCreatedShipmentsCount += 1;
+      } catch (e) {
+        console.log(e);
+      }
     }
   };
 
@@ -227,29 +201,54 @@ export default withPageAuthRequired(function Orders(props: PagePropsWithAuth) {
 
   return (
     <>
+      {contextHolder}
       <Head>
         <title>Užsakymai</title>
       </Head>
-      <Title>Užsakymai</Title>
+      <Typography.Title>Užsakymai</Typography.Title>
       <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
         <div style={{ display: "flex", gap: 10 }}>
-          <RangePicker
+          <DatePicker.RangePicker
             style={{ alignSelf: "flex-start" }}
             format={"YYYY-MM-DD"}
             value={dateRange}
             onCalendarChange={handleDateChange}
           />
+          <Select
+            allowClear
+            placeholder="Statusas"
+            style={{ width: 150 }}
+            value={selectedStatus}
+            onChange={(value) => setSelectedStatus(value)}
+            options={[
+              { value: FinancialStatus.AUTHORIZED, label: "Authorized" },
+              { value: FinancialStatus.EXPIRED, label: "Expired" },
+              { value: FinancialStatus.PAID, label: "Paid" },
+              {
+                value: FinancialStatus.PARTIALLY_PAID,
+                label: "Partially Paid",
+              },
+              {
+                value: FinancialStatus.PARTIALLY_REFUNDED,
+                label: "Partially Refunded",
+              },
+              { value: FinancialStatus.PENDING, label: "Pending" },
+              { value: FinancialStatus.REFUNDED, label: "Refunded" },
+              { value: FinancialStatus.UNPAID, label: "Unpaid" },
+              { value: FinancialStatus.VOIDED, label: "Voided" },
+            ]}
+          />
           <Button
             disabled={selectedOrdersIds.length === 0}
             type="primary"
             // loading={isStickerLoading}
-            // onClick={() => handleDownloadSticker(selectedShipmentIds)}
+            onClick={() => createMultipleShipments()}
           >
             {`Siųsti siuntas (${selectedOrdersIds.length})`}
           </Button>
         </div>
         <Table
-          columns={columns}
+          columns={ordersColumns(handleSendOrderClick)}
           dataSource={orders ?? []}
           loading={isOrdersLoading}
           rowKey="id"
@@ -288,7 +287,7 @@ export default withPageAuthRequired(function Orders(props: PagePropsWithAuth) {
         <CreateShipmentForm
           form={form}
           orderToSend={orderToSend}
-          onFinish={onFinish}
+          onFinish={(values) => createShipment(values, orderToSend)}
         />
       </Modal>
     </>

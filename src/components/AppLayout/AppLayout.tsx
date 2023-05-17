@@ -1,10 +1,11 @@
-import { Button, Layout, Menu, Spin, Tooltip, Typography } from "antd";
 import { InboxOutlined, SendOutlined, LogoutOutlined } from "@ant-design/icons";
-import React, { PropsWithChildren } from "react";
-import { useRouter } from "next/router";
-import { Path } from "@/interfaces";
-import Image from "next/image";
 import { useUser } from "@auth0/nextjs-auth0/client";
+import { Button, Layout, Menu, Spin, Tooltip, Typography } from "antd";
+import Image from "next/image";
+import { useRouter } from "next/router";
+import React, { PropsWithChildren, useEffect, useState } from "react";
+
+import { Path } from "@/interfaces";
 
 const { Header, Sider, Content } = Layout;
 const { Text } = Typography;
@@ -12,6 +13,15 @@ const { Text } = Typography;
 export default function AppLayout({ children }: PropsWithChildren) {
   const { pathname, push } = useRouter();
   const { user } = useUser();
+  const [selectedKey, setSelectedKey] = useState<string[]>([]);
+
+  const handleMenuItemSelect = (items: string[]) => {
+    setSelectedKey(items);
+  };
+
+  useEffect(() => {
+    handleMenuItemSelect([pathname.split("/")?.[1]]);
+  }, [pathname]);
 
   if (!user) {
     return (
@@ -54,7 +64,8 @@ export default function AppLayout({ children }: PropsWithChildren) {
         </div>
         <Menu
           theme="dark"
-          defaultSelectedKeys={[pathname.split("/")?.[1]]}
+          selectedKeys={selectedKey}
+          onSelect={(info) => handleMenuItemSelect(info.keyPath)}
           items={[
             {
               key: "orders",

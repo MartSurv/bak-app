@@ -1,8 +1,9 @@
-import { NextApiRequest, NextApiResponse } from "next";
 import { withApiAuthRequired } from "@auth0/nextjs-auth0";
 import { AxiosError } from "axios";
-import clientPromise from "@/lib/mongodb";
 import dayjs from "dayjs";
+import { NextApiRequest, NextApiResponse } from "next";
+
+import clientPromise from "@/lib/mongodb";
 
 export default withApiAuthRequired(async function handler(
   req: NextApiRequest,

@@ -1,3 +1,13 @@
+import { withPageAuthRequired } from "@auth0/nextjs-auth0/client";
+import { useQuery } from "@tanstack/react-query";
+import { Button, Collapse, DatePicker, Table, Typography } from "antd";
+import { ColumnsType, TablePaginationConfig } from "antd/es/table";
+import { AxiosError } from "axios";
+import dayjs from "dayjs";
+import Head from "next/head";
+import { RangeValue } from "rc-picker/lib/interface";
+import { useState } from "react";
+
 import useGetSticker from "@/hooks/useGetSticker";
 import useInitiateShipment from "@/hooks/useInitiateShipment";
 import { PagePropsWithAuth, QueryKeys } from "@/interfaces";
@@ -10,15 +20,6 @@ import {
 import GetShipments from "@/internalApi/GetShipments";
 import createPDF from "@/utils/createPDF";
 import isEUCountry from "@/utils/isEUCountry";
-import { withPageAuthRequired } from "@auth0/nextjs-auth0/client";
-import { useQuery } from "@tanstack/react-query";
-import { Button, Collapse, DatePicker, Table, Typography } from "antd";
-import { ColumnsType, TablePaginationConfig } from "antd/es/table";
-import { AxiosError } from "axios";
-import dayjs from "dayjs";
-import Head from "next/head";
-import { RangeValue } from "rc-picker/lib/interface";
-import { useState } from "react";
 
 const { Title, Text } = Typography;
 const { RangePicker } = DatePicker;
@@ -42,7 +43,7 @@ export default withPageAuthRequired(function Shipments(
 
   const { data: shipmentData, isLoading } = useQuery({
     queryKey: [QueryKeys.SHIPMENTS, pagination?.pageSize, dateRange],
-    queryFn: () => GetShipments(pagination?.pageSize ?? 5, dateRange),
+    queryFn: () => GetShipments(dateRange),
     onError: (e) => {
       const error = e as AxiosError;
       notificationApi.error({
