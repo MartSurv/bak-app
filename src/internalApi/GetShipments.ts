@@ -9,9 +9,9 @@ const GetShipments = (dateRange: RangeValue<dayjs.Dayjs>) =>
     .get<Shipment[]>(
       `${window.location.protocol}//${
         window.location.host
-      }/api/shipments?start=${dateRange[0].format(
+      }/api/shipments?start=${dateRange?.[0]?.format(
         "YYYY-MM-DD"
-      )}&end=${dateRange[1].format("YYYY-MM-DD")}`
+      )}&end=${dateRange?.[1]?.format("YYYY-MM-DD")}`
     )
     .then(({ data }) => {
       return data;
