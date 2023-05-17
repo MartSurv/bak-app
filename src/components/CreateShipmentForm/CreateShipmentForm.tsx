@@ -1,6 +1,7 @@
+import { Collapse, Form, FormInstance, Input, Table } from "antd";
+
 import { Order } from "@/interfaces/order";
 import isEUCountry from "@/utils/isEUCountry";
-import { Collapse, Form, FormInstance, Input, Table } from "antd";
 
 export interface CreateShipmentFormData {
   name: string;

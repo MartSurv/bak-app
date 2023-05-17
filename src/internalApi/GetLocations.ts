@@ -1,5 +1,6 @@
-import { Location } from "@/interfaces/location";
 import axios from "axios";
+
+import { Location } from "@/interfaces/location";
 
 interface GetLocationsResponse {
   locations: Location[];

@@ -1,6 +1,7 @@
+import { useQuery } from "@tanstack/react-query";
+
 import { QueryKeys } from "@/interfaces";
 import GetLocations from "@/internalApi/GetLocations";
-import { useQuery } from "@tanstack/react-query";
 
 const useGetLocations = () =>
   useQuery({

@@ -49,7 +49,7 @@ export default withPageAuthRequired(function Orders(props: PagePropsWithAuth) {
     dayjs(),
   ]);
 
-  const { data: orders, isLoading: isOrdersLoading } = useGetOrders(
+  const { data: orders, isFetching: isOrdersLoading } = useGetOrders(
     dateRange?.[0]?.format("YYYY-MM-DD"),
     dateRange?.[1]?.add(1, "day").format("YYYY-MM-DD"),
     selectedStatus

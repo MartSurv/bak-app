@@ -1,8 +1,9 @@
-import { QueryKeys } from "@/interfaces";
-import GetSticker from "@/internalApi/GetSticker";
 import { useMutation } from "@tanstack/react-query";
 import { NotificationInstance } from "antd/es/notification/interface";
 import { AxiosError } from "axios";
+
+import { QueryKeys } from "@/interfaces";
+import GetSticker from "@/internalApi/GetSticker";
 
 const useGetSticker = (notificationApi: NotificationInstance) =>
   useMutation({

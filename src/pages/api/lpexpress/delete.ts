@@ -1,6 +1,7 @@
-import { NextApiRequest, NextApiResponse } from "next";
 import { withApiAuthRequired } from "@auth0/nextjs-auth0";
 import axios, { AxiosError } from "axios";
+import { NextApiRequest, NextApiResponse } from "next";
+
 import { LpexpressToken } from "@/interfaces/lpexpress";
 import clientPromise from "@/lib/mongodb";
 

@@ -1,5 +1,6 @@
-import { Shipment } from "@/interfaces/lpexpress";
 import axios from "axios";
+
+import { Shipment } from "@/interfaces/lpexpress";
 
 const CreateShipment = (shipmentData: Shipment) =>
   axios

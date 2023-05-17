@@ -1,5 +1,6 @@
-import { Sticker } from "@/interfaces/lpexpress";
 import axios from "axios";
+
+import { Sticker } from "@/interfaces/lpexpress";
 
 const GetSticker = (id: string[]) =>
   axios
