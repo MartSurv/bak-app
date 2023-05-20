@@ -143,7 +143,7 @@ export default withPageAuthRequired(function Orders(props: PagePropsWithAuth) {
 
       try {
         const shipmentData = await createShipmentAsync({
-          template: 74,
+          template: 78,
           partCount: 1,
           receiver: {
             address: {

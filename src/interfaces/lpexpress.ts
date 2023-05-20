@@ -56,6 +56,14 @@ export interface Documents {
   cn22Form?: Cn22Form;
 }
 
+export interface AdditionalService {
+  id: number;
+  title?: string;
+  description?: string;
+  summary?: string;
+  price?: { amount: 0; currency: "EUR" };
+}
+
 export interface Shipment {
   template: number;
   weight: number;
@@ -63,15 +71,7 @@ export interface Shipment {
   documents: Documents;
   sender?: Sender;
   receiver: Receiver;
-  additionalServices?: [
-    {
-      id: 2;
-      title: "Pirmenybinis siuntimas";
-      description: 'Siunta, kuri žymima specialiu "Prioritaire/Pirmenybinė" ženklu ir yra pristatoma pirmumo tvarka.';
-      summary: "Siunta pažymėta ženklu „Prioritaire / Pirmenybinė“ ir gavėją pasiekia greičiau.";
-      price: { amount: 0; currency: "EUR" };
-    }
-  ];
+  additionalServices?: AdditionalService[];
   id?: string;
   createdOn?: string;
   barcode?: string;

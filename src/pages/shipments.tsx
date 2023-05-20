@@ -1,7 +1,7 @@
 import { withPageAuthRequired } from "@auth0/nextjs-auth0/client";
 import { useQuery } from "@tanstack/react-query";
-import { Button, Collapse, DatePicker, Table, Typography } from "antd";
-import { ColumnsType, TablePaginationConfig } from "antd/es/table";
+import { Button, DatePicker, Table, Typography } from "antd";
+import { TablePaginationConfig } from "antd/es/table";
 import { AxiosError } from "axios";
 import dayjs from "dayjs";
 import Head from "next/head";
@@ -11,19 +11,9 @@ import { useState } from "react";
 import useGetSticker from "@/hooks/useGetSticker";
 import useInitiateShipment from "@/hooks/useInitiateShipment";
 import { PagePropsWithAuth, QueryKeys } from "@/interfaces";
-import {
-  Documents,
-  Receiver,
-  Shipment,
-  ShipmentStatus,
-} from "@/interfaces/lpexpress";
 import GetShipments from "@/internalApi/GetShipments";
 import createPDF from "@/utils/createPDF";
-import isEUCountry from "@/utils/isEUCountry";
-
-const { Title, Text } = Typography;
-const { RangePicker } = DatePicker;
-const { Panel } = Collapse;
+import shipmentsColumns from "@/utils/shipmentsColumns";
 
 export default withPageAuthRequired(function Shipments(
   props: PagePropsWithAuth
@@ -93,117 +83,15 @@ export default withPageAuthRequired(function Shipments(
     }
   };
 
-  const columns: ColumnsType<Shipment> = [
-    {
-      title: "ID",
-      dataIndex: "id",
-    },
-    {
-      title: "Gavėjas",
-      dataIndex: "receiver",
-      render: (value: Receiver) => (
-        <div style={{ display: "flex", flexDirection: "column", gap: 5 }}>
-          <Text>{value.name}</Text>
-          {value.email && <Text>{value.email}</Text>}
-          {value.phone && <Text>{value.phone}</Text>}
-          <Text>{value.address.address1}</Text>
-          <Text>{`${value.address.locality}, ${value.address.postalCode}, ${value.address.country}`}</Text>
-        </div>
-      ),
-    },
-    {
-      title: "Siuntėjas",
-      dataIndex: "sender",
-      render: (value: Receiver) => (
-        <div style={{ display: "flex", flexDirection: "column", gap: 5 }}>
-          {value.email && <Text>{value.email}</Text>}
-          {value.phone && <Text>{value.phone}</Text>}
-          {value.address.street && value.address.building && (
-            <Text>{`${value.address.street} ${value.address.building}`}</Text>
-          )}
-          <Text>{`${value.address.locality}, ${value.address.postalCode}, ${value.address.country}`}</Text>
-        </div>
-      ),
-    },
-    {
-      title: "Sukūrimo data",
-      dataIndex: "createdOn",
-    },
-    {
-      title: "Dokumentai",
-      dataIndex: "documents",
-      render: (value: Documents, record) => {
-        if (!record.id || isEUCountry(record.receiver.address.country)) {
-          return null;
-        }
-        return (
-          <Collapse>
-            <Panel header="CN22" key={record.id}>
-              <Table
-                size="small"
-                columns={[
-                  { title: "Prekė", dataIndex: "summary" },
-                  { title: "Kiekis", dataIndex: "quantity" },
-                  {
-                    title: "Kaina",
-                    dataIndex: "amount",
-                    render: (value) => `€${value}`,
-                  },
-                  { title: "Svoris", dataIndex: "weight" },
-                ]}
-                dataSource={value.cn22Form?.cnParts ?? []}
-                rowKey="id"
-                pagination={false}
-              />
-            </Panel>
-          </Collapse>
-        );
-      },
-    },
-    {
-      title: "Statusas",
-      dataIndex: "status",
-    },
-    {
-      title: "Veiksmai",
-      key: "action",
-      render: (_, record) => {
-        if (record.status !== ShipmentStatus.LABEL_CREATED) {
-          return (
-            <Button
-              type="primary"
-              loading={isInitiateShipmentLoading}
-              onClick={() => initiateShipment([record.id ?? ""])}
-            >
-              Generuoti lipduką
-            </Button>
-          );
-        }
-
-        return (
-          <div style={{ display: "flex", gap: 10 }}>
-            <Button
-              type="primary"
-              loading={isStickerLoading}
-              onClick={() => handleDownloadSticker([record.id ?? ""])}
-            >
-              Atsisiųsti lipduką
-            </Button>
-          </div>
-        );
-      },
-    },
-  ];
-
   return (
     <>
       <Head>
         <title>Siuntos</title>
       </Head>
-      <Title>Siuntos</Title>
+      <Typography.Title>Siuntos</Typography.Title>
       <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
         <div style={{ display: "flex", gap: 10 }}>
-          <RangePicker
+          <DatePicker.RangePicker
             style={{ alignSelf: "flex-start" }}
             format={"YYYY-MM-DD"}
             value={dateRange}
@@ -219,7 +107,12 @@ export default withPageAuthRequired(function Shipments(
           </Button>
         </div>
         <Table
-          columns={columns}
+          columns={shipmentsColumns(
+            isInitiateShipmentLoading,
+            isStickerLoading,
+            initiateShipment,
+            handleDownloadSticker
+          )}
           dataSource={shipmentData ?? []}
           loading={isLoading}
           pagination={pagination}

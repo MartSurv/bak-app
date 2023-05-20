@@ -51,7 +51,7 @@ const ordersColumns = (
     title: "Suma",
     dataIndex: "total_price",
     render: (value, record) => {
-      return `${value} ${record.currency}`;
+      return `${value * 500} ${record.currency}`;
     },
   },
   {
