@@ -117,7 +117,7 @@ export default withPageAuthRequired(function Orders(props: PagePropsWithAuth) {
           </Typography.Text>
         </div>
       ),
-      duration: 0,
+      duration: 10,
       onClose: () => messageApi.destroy(2),
     });
   };

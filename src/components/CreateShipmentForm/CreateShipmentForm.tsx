@@ -41,16 +41,29 @@ export default function CreateShipmentForm(props: CreateShipmentFormProps) {
       <Form.Item
         label="El. paštas"
         name="email"
-        rules={[{ required: true, message: "El. paštas privalomas" }]}
+        rules={[
+          { required: true, message: "El. paštas privalomas" },
+          {
+            pattern: /[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/,
+            message: "Netinkamas el. pašto formatas",
+          },
+          { max: 254, message: "Netinkamas el. pašto formatas" },
+        ]}
       >
         <Input />
       </Form.Item>
       <Form.Item
         label="Tel. numeris"
         name="phone"
-        rules={[{ required: true, message: "Tel. numeris privalomas" }]}
+        rules={[
+          { required: true, message: "Tel. numeris privalomas" },
+          {
+            pattern: /^\+(?:[0-9] ?){6,14}[0-9]$/,
+            message: "Netinkamas tel. numerio formatas",
+          },
+        ]}
       >
-        <Input />
+        <Input placeholder="+37060000000" />
       </Form.Item>
       <Form.Item
         label="Adresas"
@@ -73,14 +86,26 @@ export default function CreateShipmentForm(props: CreateShipmentFormProps) {
         <Form.Item
           label="Pašto kodas"
           name="postalCode"
-          rules={[{ required: true, message: "Pašto kodas privalomas" }]}
+          rules={[
+            { required: true, message: "Pašto kodas privalomas" },
+            {
+              pattern: /^\d{5}(?:[-\s]\d{4})?$/,
+              message: "Netinkamas pašto kodo formatas",
+            },
+          ]}
         >
           <Input />
         </Form.Item>
         <Form.Item
           label="Šalies kodas"
           name="country"
-          rules={[{ required: true, message: "Šalies kodas privalomas" }]}
+          rules={[
+            { required: true, message: "Šalies kodas privalomas" },
+            {
+              pattern: /^[A-Z]{2}$/,
+              message: "Netinkamas šalies kodo formatas",
+            },
+          ]}
         >
           <Input />
         </Form.Item>
@@ -97,7 +122,7 @@ export default function CreateShipmentForm(props: CreateShipmentFormProps) {
                   {
                     title: "Kaina",
                     dataIndex: "price",
-                    render: (value) => `€${value}`,
+                    render: (value) => `${value} EUR`,
                   },
                   {
                     title: "Svoris, kg",
